@@ -21,14 +21,11 @@
             align-items: center;
             cursor: pointer;
         }
-        canvas, video, img.asset-media {
+        canvas {
             position: absolute;
             width: 100%;
             height: 100%;
             object-fit: contain;
-            display: none;
-        }
-        canvas {
             display: block;
         }
         .speech-bubble {
@@ -85,7 +82,7 @@
         </div>
     </div>
 
-    <!-- ซ่อน element มีเดียต้นฉบับที่ดึงตรงจาก Catbox -->
+    <!-- แหล่งมีเดียที่ดึงตรงจาก Catbox ตามที่คุณให้มา -->
     <video id="vid-idle" src="https://files.catbox.moe/laq4ih.mp4" crossorigin="anonymous" loop muted playsinline></video>
     <img id="img-drag" src="https://files.catbox.moe/gxabnn.png" crossorigin="anonymous">
     <video id="vid-eat" src="https://files.catbox.moe/4k9h08.mp4" crossorigin="anonymous" muted playsinline></video>
@@ -112,11 +109,9 @@
 
         let currentMode = "idle";
         let hungerTimer = 0;
-        let animationFrameId;
 
         function switchMode(mode) {
             currentMode = mode;
-            // หยุดวิดีโอทั้งหมดก่อน
             Object.values(mediaSources).forEach(el => {
                 if (el.tagName === "VIDEO") el.pause();
             });
@@ -128,7 +123,6 @@
             }
         }
 
-        // ลูปประมวลผล Chroma Key วาดภาพ/วิดีโอลง Canvas แบบเรียลไทม์
         function processChromaKey() {
             let activeEl = mediaSources[currentMode];
             if (activeEl) {
@@ -139,17 +133,15 @@
                 let data = frame.data;
                 for (let i = 0; i < data.length; i += 4) {
                     let r = data[i], g = data[i+1], b = data[i+2];
-                    // ตรวจจับและลบพื้นหลังสีน้ำเงิน
                     if (b > 130 && r < 80 && g < 120) {
                         data[i+3] = 0;
                     }
                 }
                 ctx.putImageData(frame, 0, 0);
             }
-            animationFrameId = requestAnimationFrame(processChromaKey);
+            requestAnimationFrame(processChromaKey);
         }
 
-        // เริ่มต้นทำงาน
         mediaSources.idle.play().then(() => {
             switchMode("idle");
             processChromaKey();
@@ -159,7 +151,7 @@
         });
 
         function toggleMenu() {
-            if (currentMode === "thump") return; // ถ้าโดนทุบหัวอยู่ เมนูจะไม่เปิด
+            if (currentMode === "thump") return;
             menu.style.display = menu.style.display === "flex" ? "none" : "flex";
         }
 
@@ -185,7 +177,7 @@
 
         function thumpHead() {
             menu.style.display = "none";
-            switchMode("thump"); // ตัดการทำงานทุกอย่างทันทีเมื่อโดนทุบ
+            switchMode("thump"); // ทุบปุ๊บ หยุดทุกอย่างทันที
             speech.innerText = "Ouch! 💢";
             setTimeout(() => {
                 speech.innerText = "Hmph!";
@@ -215,7 +207,7 @@
             }, 100);
         }
 
-        // ระบบจับเวลาหิว 3 นาทีขึ้นไป (180 วินาที)
+        // หิวเมื่อครบ 3 นาทีขึ้นไป (180 วินาที)
         setInterval(() => {
             hungerTimer++;
             if (hungerTimer >= 180 && currentMode === "idle") {
