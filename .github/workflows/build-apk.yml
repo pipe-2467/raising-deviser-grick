@@ -25,7 +25,7 @@ jobs:
         gradle wrapper --gradle-version 7.5
 
     - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      run: chmod +x gradlew || true
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug
