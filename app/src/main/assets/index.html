@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raising Deviser Grick</title>
+    <style>
+        body {
+            margin: 0;
+            background: transparent;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            user-select: none;
+        }
+        #grick-container {
+            position: relative;
+            width: 180px;
+            height: 220px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .speech-bubble {
+            position: absolute;
+            top: -35px;
+            background: white;
+            color: black;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid #000;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .action-menu {
+            position: absolute;
+            bottom: -90px;
+            background: rgba(22, 36, 71, 0.95);
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            padding: 5px;
+            z-index: 10;
+        }
+        .action-menu button {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="grick-container" onclick="toggleMenu()">
+        <div id="speech" class="speech-bubble">Hello!</div>
+        <canvas id="canvas"></canvas>
+        
+        <div id="menu" class="action-menu" onclick="event.stopPropagation()">
+            <button onclick="feedCookie()">Feed Cookie 🍪</button>
+            <button onclick="petHead()">Pet Head 💖</button>
+            <button onclick="thumpHead()">Thump Head 💢</button>
+            <button onclick="disappear()">Disappear 👻</button>
+        </div>
+    </div>
+
+    <!-- วางรูปภาพตัวละครของคุณไว้ที่ assets/10358.png -->
+    <img id="source-img" src="10358.png" style="display:none;" crossorigin="anonymous">
+
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const img = document.getElementById("source-img");
+        const speech = document.getElementById("speech");
+        const menu = document.getElementById("menu");
+
+        canvas.width = 180;
+        canvas.height = 220;
+
+        let currentState = "idle";
+        let hungerTimer = 0;
+
+        img.onload = function() {
+            drawChromaKey();
+        };
+
+        function drawChromaKey() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            let frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let l = frame.data.length;
+
+            for (let i = 0; i < l; i += 4) {
+                let red = frame.data[i];
+                let green = frame.data[i + 1];
+                let blue = frame.data[i + 2];
+
+                // ระบบลบพื้นหลังสีน้ำเงิน
+                if (blue > 150 && red < 50 && green < 100) {
+                    frame.data[i + 3] = 0; 
+                }
+            }
+            ctx.putImageData(frame, 0, 0);
+        }
+
+        function toggleMenu() {
+            if (currentState === "thump") return;
+            menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+        }
+
+        function feedCookie() {
+            menu.style.display = "none";
+            currentState = "eat";
+            speech.innerText = "Yummy! 🍪";
+            setTimeout(() => {
+                speech.innerText = "Hello!";
+                currentState = "idle";
+            }, 3000);
+        }
+
+        function petHead() {
+            menu.style.display = "none";
+            currentState = "pet";
+            speech.innerText = "Hehe~ 💕";
+            setTimeout(() => {
+                speech.innerText = "Hello!";
+                currentState = "idle";
+            }, 3000);
+        }
+
+        function thumpHead() {
+            menu.style.display = "none";
+            currentState = "thump"; // หยุดทุกอย่างทันทีเมื่อโดนทุบ
+            speech.innerText = "Ouch! 💥";
+            setTimeout(() => {
+                speech.innerText = "Hmph!";
+                currentState = "idle";
+            }, 3000);
+        }
+
+        function disappear() {
+            menu.style.display = "none";
+            let opacity = 1;
+            let fadeInterval = setInterval(() => {
+                opacity -= 0.1;
+                canvas.style.opacity = opacity;
+                if (opacity <= 0) clearInterval(fadeInterval);
+            }, 100);
+        }
+
+        // ระบบจับเวลาหิว 3 นาทีขึ้นไป (180 วินาที)
+        setInterval(() => {
+            hungerTimer++;
+            if (hungerTimer >= 180 && currentState === "idle") {
+                speech.innerText = "I'm hungry! 🍎";
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
